@@ -1,5 +1,5 @@
 
-import eq_solver
+import eq_solver.eq_solver as eq_solver
 import argparse
 
 class Node:
@@ -79,11 +79,14 @@ class Component:
 class Resistor(Component):
 
     def __init__(self, T_p: Node, T_n: Node, resistance_in: float) -> None:
+        'Constructor of the class Resistor'
+
         super().__init__(T_p, T_n)
 
         self.__resistance = resistance_in
 
     def print_expression(self, equations: dict) -> None:
+        'Writes the expression of the component in the equation of each of the terminals.'
         
         if self.T_p.is_empty():
 
@@ -108,11 +111,14 @@ class Resistor(Component):
 class Source(Component):
 
     def __init__(self, T_p: Node, T_n: Node, voltage: float) -> None:
+        'Constructor of the Source class'
+
         super().__init__(T_p, T_n)
 
         self.__potential = voltage
 
     def check_reference(self, supernode_eqs: list[str]):
+        'Checks if the source has a reference connected to one of its terminals. If not, its a supernode.'
 
         if (self.T_n.is_empty()) and (self.T_p.is_empty()):
 
