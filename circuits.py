@@ -1,12 +1,13 @@
 
 import eq_solver.eq_solver as eq_solver
+import numpy as np
 import argparse
 
 class Node:
 
     __voltage : float
 
-    __supernode: bool
+    #__supernode: bool
 
     __empty: bool
 
@@ -28,10 +29,10 @@ class Node:
 
         self.set_value(0.0)
 
-    def set_to_supernode(self) -> None:
-        'Converts the node in a supernode'
+    #def set_to_supernode(self) -> None:
+    #   'Converts the node in a supernode'
 
-        self.__supernode = True
+    #   self.__supernode = True
 
     def symbolic_name(self) -> str:
         'Returns the symbolic name of the node. Used for the system of linear equations'
@@ -45,7 +46,7 @@ class Node:
 
         return self.__empty
 
-    def get_supernode(self) -> bool:
+    def get_supernode(self, ) -> bool:
         
         return self.__supernode
 
@@ -110,12 +111,15 @@ class Resistor(Component):
 
 class Source(Component):
 
+    __supernode: bool
+
     def __init__(self, T_p: Node, T_n: Node, voltage: float) -> None:
         'Constructor of the Source class'
 
         super().__init__(T_p, T_n)
 
         self.__potential = voltage
+        self.__supernode = False
 
     def check_reference(self, supernode_eqs: list[str]):
         'Checks if the source has a reference connected to one of its terminals. If not, its a supernode.'
@@ -124,8 +128,7 @@ class Source(Component):
 
             ## Supernode
             
-            self.T_n.set_to_supernode()
-            self.T_p.set_to_supernode()
+            self.__supernode = True
 
             supernode_eqs.append(f"{self.T_p.symbolic_name()} - {self.T_n.symbolic_name()} - {self.__potential} ")
             return
@@ -135,9 +138,14 @@ class Source(Component):
 
         else:
             self.T_n.set_value( - self.__potential)
-   
+    
+    def is_supernode(self) -> bool:
+        'Checks whether the source acts as a supernode or not.'
 
-def simulate() -> dict[Node, str]:
+        return self.__supernode
+
+def simulate() -> list[str]:
+    'Simulation function'
 
     nodes: list[Node] = []
     components: list = []
@@ -145,7 +153,7 @@ def simulate() -> dict[Node, str]:
 
     equations: dict[Node, str] = {}
 
-    supernode_equations: list[str] = []
+    list_equations: list[str] = [] # Return list
     
     ################# Simulation parameters #################
 
@@ -153,32 +161,54 @@ def simulate() -> dict[Node, str]:
     B = Node("B")
     C = Node("C")
     D = Node("D")
+    E = Node("E")
 
-    Gnd = Ground(D)
+    GND = Ground(E)
+ 
+    U_1 = Source(A, E, 3.0)
+    U_2 = Source(B, C, 1.0)
+    U_3 = Source(D, E, 2.0)
 
-    U_1 = Source(A, D, 5.0)
-    R1 = Resistor(B, A, 100)
-    R2 = Resistor(C, B, 1000)
-    R3 = Resistor(C, B, 500)
-    R4 = Resistor(D, C, 1000)
+    R1 = Resistor(B, A, 2000)
+    R2 = Resistor(E, B, 3000)
+    R3 = Resistor(E, C, 2000)
+    R4 = Resistor(C, D, 1000)
 
     sources.append(U_1)
+    sources.append(U_2)
+    sources.append(U_3)
     components.append(R1)
     components.append(R2)
     components.append(R3)
     components.append(R4)
 
     ##################################
-    Gnd.set_ground() # Works
+
+    GND.set_ground() # Works
 
     for source in sources:
-        source.check_reference(supernode_equations)
+        source.check_reference(list_equations)
 
     for component in components:
 
         component.print_expression(equations)
+
+    # check for supernodes
     
-    return equations
+    # excluded_nodes: list[Node] = []
+
+    for source in sources:
+        if source.is_supernode():
+            list_equations.append(equations[source.T_p] + equations[source.T_n])     
+            equations.pop(source.T_p)
+            equations.pop(source.T_n)
+        else:
+            continue
+    
+    for node in equations:
+        list_equations.append(equations[node])
+    
+    return list_equations
 
 
 if __name__ == "__main__":
@@ -193,25 +223,26 @@ if __name__ == "__main__":
 
     terminal: bool = args.terminal
 
-    equations: dict[Node, str] = simulate()
+    equations: list[str] = simulate()
 
     if terminal:
         file = open("output.txt", 'w')
 
         with file as f:
-            for node in equations:
-                f.write(equations[node])
+            for eq in equations:
+                f.write(eq)
                 f.write('\n')
 
     else: 
         
-        equation_list: list[str] = []
+        a: np.ndarray
+        b: np.ndarray
 
-        for node in equations:
-            equation_list.append(equations[node])
-        
-        eq_solver.solve(equation_list)
+        a, b, vars = eq_solver.parse_string_to_array(equations)
 
+        solution = np.linalg.solve(a, b)
+
+        eq_solver.print_output(solution, vars)
 
 
 

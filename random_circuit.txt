@@ -1,0 +1,33 @@
+    A = Node("A")
+    B = Node("B")
+    C = Node("C")
+    D = Node("D")
+    E = Node("E") 
+    F = Node("F")
+
+    Gnd = Ground(F)
+
+    U_1 = Source(F, A, 5.0)
+    R1 = Resistor(A, B, 100)
+
+    R2 = Resistor(C, B, 150)
+    R3 = Resistor(C, B, 1000)
+
+    R4 = Resistor(D, C, 1000)
+
+    R5 = Resistor(E, D, 2000)
+
+    R6 = Resistor(F, D, 150)
+    
+    U_2 = Source(E, F, 10.0)
+
+    sources.append(U_1)
+    sources.append(U_2)
+    components.append(R1)
+    components.append(R2)
+    components.append(R3)
+    components.append(R4)
+    components.append(R5)
+    components.append(R6)
+
+

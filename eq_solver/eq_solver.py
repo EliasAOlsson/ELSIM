@@ -42,22 +42,10 @@ def print_ntype(thing_to_print) -> None:
     print(thing_to_print)
     print("Type of the above thing{}".format(type(thing_to_print)))
 
-def print_output(equations: list[sp.core.add.Add], solution: np.ndarray):
-
-    for eq in equations:
-        print(eq)
-    
-    print()
-
-    print(solution)
-
-
-def solve(lines: list[str]) -> None:
+def parse_string_to_array(lines: list[str]) -> tuple[np.ndarray, np.ndarray, set[str]]:
     """ 
-    The main solving function. The equations are passed in string format separated by '\n' characters
-    
-    The solution is outputed through the terminal.
-
+    Converts the input equations in string format into the corresponding matrices for linear solving
+    and returns them in a tuple. The tuple returns the order of the variables as well.
     """
 
     equations:list[sp.core.add.Add] = []  # List with the parsed equations
@@ -129,13 +117,22 @@ def solve(lines: list[str]) -> None:
 
         a_list.append(values_current_eq)
 
-    b_np = np.array(b_list, dtype=float)
+    b = np.array(b_list, dtype=float)
 
-    a_np = np.array(a_list, dtype=float)
+    a = np.transpose(np.array(a_list, dtype=float))
 
-    a_np_t = np.transpose(a_np)
+    return a, b, variables
 
-    print_output(equations, np.linalg.solve(a_np_t, b_np))
+def print_output(solutions: np.ndarray, vars: set[str]) -> None:
+    """
+    Prints the solutions in a fancy way.
+    """
+    
+    i: int = 0
+
+    for variable in vars:
+        print(f"{variable}: {solutions[i]}")
+        i = i + 1
 
 
 if __name__ == "__main__":
@@ -150,7 +147,15 @@ if __name__ == "__main__":
 
     with open(file, "r") as f:
         lines: list[str] = f.readlines()
+    
+    a: np.ndarray
+    b: np.ndarray
+    vars: set[str]
 
-    solve(lines)
+    a, b, vars = parse_string_to_array(lines)
+    solution = np.linalg.solve(a, b)
+
+    print_output(solution, vars)
+
 
 
