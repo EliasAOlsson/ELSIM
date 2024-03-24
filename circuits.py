@@ -7,8 +7,6 @@ class Node:
 
     __voltage : float
 
-    #__supernode: bool
-
     __empty: bool
 
     def __init__(self, name_in:str) -> None:
@@ -29,11 +27,6 @@ class Node:
 
         self.set_value(0.0)
 
-    #def set_to_supernode(self) -> None:
-    #   'Converts the node in a supernode'
-
-    #   self.__supernode = True
-
     def symbolic_name(self) -> str:
         'Returns the symbolic name of the node. Used for the system of linear equations'
 
@@ -43,6 +36,7 @@ class Node:
             return f"{self.__voltage}"
 
     def is_empty(self) -> bool:
+        'Will return true if the Node doesnt have an assigned value'
 
         return self.__empty
 
@@ -94,14 +88,14 @@ class Resistor(Component):
             if self.T_p not in equations:
                 equations[self.T_p] = ""
 
-            equations[self.T_p] += f"+ 1/{self.__resistance} * ({self.T_p.symbolic_name()} - {self.T_n.symbolic_name()}) "
+            equations[self.T_p] += f"- 1/{self.__resistance} * ({self.T_p.symbolic_name()} - {self.T_n.symbolic_name()}) "
         
         if self.T_n.is_empty():
             
             if self.T_n not in equations:
                 equations[self.T_n] = ""
 
-            equations[self.T_n] += f"- 1/{self.__resistance} * ({self.T_p.symbolic_name()} - {self.T_n.symbolic_name()}) "
+            equations[self.T_n] += f"+ 1/{self.__resistance} * ({self.T_p.symbolic_name()} - {self.T_n.symbolic_name()}) "
 
     def get_resistance(self) -> float:
         'Returns the value of the resistor.'
@@ -144,6 +138,36 @@ class Source(Component):
 
         return self.__supernode
 
+class Current_source(Component):
+
+    def __init__(self, T_p_in: Node, T_n_in: Node, current_in: float) -> None:
+        'Constructor for the class Current_source'
+        super().__init__(T_p_in, T_n_in)
+
+        self.__current = current_in
+
+    def get_current(self) -> float:
+
+        return self.__current
+
+    def print_expression(self, equations: dict):
+        'Writes the expression of the component in the equation of each of the terminals.'
+
+            
+        if self.T_p.is_empty():
+
+            if self.T_p not in equations:
+                equations[self.T_p] = ""
+
+            equations[self.T_p] += f"+ {self.__current} "
+            
+        if self.T_n.is_empty():
+                
+            if self.T_n not in equations:
+                equations[self.T_n] = ""
+
+            equations[self.T_n] += f"- {self.__current} "
+
 def simulate() -> list[str]:
     'Simulation function'
 
@@ -160,27 +184,20 @@ def simulate() -> list[str]:
     A = Node("A")
     B = Node("B")
     C = Node("C")
-    D = Node("D")
-    E = Node("E")
+    
+    GND = Ground(A)
+    
+    U_V = Source(C, B, 5.0)
+    U_1 = Current_source(A, C, 0.005)
+    R_1 = Resistor(C, A, 1000)
+    R_2 = Resistor(C, A, 500)
+    R_3 = Resistor(A, B, 250)
 
-    GND = Ground(E)
- 
-    U_1 = Source(A, E, 3.0)
-    U_2 = Source(B, C, 1.0)
-    U_3 = Source(D, E, 2.0)
-
-    R1 = Resistor(B, A, 2000)
-    R2 = Resistor(E, B, 3000)
-    R3 = Resistor(E, C, 2000)
-    R4 = Resistor(C, D, 1000)
-
-    sources.append(U_1)
-    sources.append(U_2)
-    sources.append(U_3)
-    components.append(R1)
-    components.append(R2)
-    components.append(R3)
-    components.append(R4)
+    components.append(U_1)
+    components.append(R_1)
+    components.append(R_2)
+    components.append(R_3)
+    sources.append(U_V)
 
     ##################################
 

@@ -31,3 +31,48 @@
     components.append(R6)
 
 
+
+    A = Node("A")
+    B = Node("B")
+    C = Node("C")
+    D = Node("D")
+    E = Node("E")
+
+    GND = Ground(E)
+ 
+    U_1 = Source(A, E, 3.0)
+    U_2 = Source(B, C, 1.0)
+    U_3 = Source(D, E, 2.0)
+
+    R1 = Resistor(B, A, 2000)
+    R2 = Resistor(E, B, 3000)
+    R3 = Resistor(E, C, 2000)
+    R4 = Resistor(C, D, 1000)
+
+    sources.append(U_1)
+    sources.append(U_2)
+    sources.append(U_3)
+    components.append(R1)
+    components.append(R2)
+    components.append(R3)
+    components.append(R4)
+
+
+    A = Node("A")
+    B = Node("B")
+    C = Node("C")
+    
+    GND = Ground(C)
+    
+    U_V = Source(B, C, 5.0)
+    U_1 = Current_source(A, C, 0.005)
+    R_1 = Resistor(C, A, 1000)
+    R_2 = Resistor(C, A, 500)
+    R_3 = Resistor(A, B, 250)
+
+    components.append(U_1)
+    components.append(R_1)
+    components.append(R_2)
+    components.append(R_3)
+    sources.append(U_V)
+
